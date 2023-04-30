@@ -1,0 +1,36 @@
+node
+{
+    
+    def mavenhome = tool name: "maven3.9.1"
+    
+
+    echo "Build Number: ${BUILD_NUMBER}"
+    echo "Job Name: ${JOB_NAME}"
+    echo "Workspace: ${WORKSPACE}"
+    
+
+    stage("Git"){
+        git branch: 'development', credentialsId: 'bb5f7dfc-097b-4daf-aeff-25ed96025c96', url: 'https://github.com/Devopsaws-course/maven-web-application.git'
+    }
+    stage("mvn"){
+        sh "${mavenhome}/bin/mvn clean package"
+    }
+    
+    stage("sonar"){
+        sh "${mavenhome}/bin/mvn clean sonar:sonar"
+    }
+    
+    stage("ArtifactintoNexus"){
+        sh "${mavenhome}/bin/mvn clean deploy"
+    }
+    stage("Tomcat"){
+        sshagent(['ec2-use']) {
+        sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@172.31.38.207:/opt/apache-tomcat-9.0.73/webapps/"
+}
+    }
+    
+    stage("Job"){
+        properties([[$class: 'JobLocalConfiguration', changeReasonComment: ''], pipelineTriggers([pollSCM('* * * * *')])])
+    }
+    
+}
