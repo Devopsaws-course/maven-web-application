@@ -16,6 +16,9 @@ node
     stage("mvn"){
         sh "${mavenhome}/bin/mvn clean package"
     }
+    stage("TriggerJob"){
+    build Job: Pipelineslacknotifications
+}
   /*  
     stage("sonar"){
         sh "${mavenhome}/bin/mvn clean sonar:sonar"
